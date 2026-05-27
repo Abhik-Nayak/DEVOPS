@@ -1,1 +1,0 @@
-This is an application which contains Create-Read-Update-Delete .For this i have used Redux . 
