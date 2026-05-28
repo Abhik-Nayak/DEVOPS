@@ -124,132 +124,159 @@ A hands-on learning path for Terraform with AWS. Each project builds on the prev
 
 ---
 
-## Interview Questions — S3 (Project 1)
+## Terraform Interview Questions
 
 ### Basics
 
-**Q1. What is Amazon S3?**
-S3 (Simple Storage Service) is an object storage service that stores data as objects in buckets. It provides unlimited storage with 99.999999999% (11 nines) durability.
+**Q1. What is Terraform?**
+Terraform is an open-source Infrastructure as Code (IaC) tool by HashiCorp. You write declarative config files (`.tf`) to define infrastructure, and Terraform creates, updates, and deletes resources across any cloud provider (AWS, Azure, GCP, etc.).
 
-**Q2. What is an S3 bucket and what are the naming rules?**
-A bucket is a container for objects in S3. Rules: globally unique name across all AWS accounts, 3–63 characters, lowercase only, no underscores, must start/end with a letter or number.
+**Q2. What is Infrastructure as Code (IaC) and why does it matter?**
+IaC means managing infrastructure through code files instead of manual clicks in a console. Benefits: version control, repeatability, consistency across environments, peer review of changes, and automated deployments.
 
-**Q3. What does the `provider` block do in Terraform?**
-It tells Terraform which cloud platform to use and configures the connection. For AWS, it specifies the region and uses credentials from `aws configure` or environment variables.
+**Q3. What language does Terraform use?**
+HCL (HashiCorp Configuration Language). It's a declarative language — you describe the desired end state, not the steps to get there. Terraform also supports JSON as an alternative syntax.
 
-**Q4. What does `terraform init` actually do behind the scenes?**
-It downloads the provider plugins (e.g., AWS) into the `.terraform/` directory, creates `.terraform.lock.hcl` to lock provider versions, and initializes the backend for state storage.
+**Q4. What is the difference between declarative and imperative IaC?**
+- **Declarative (Terraform):** You say "I want 3 servers" — Terraform figures out what to create/delete to reach that state.
+- **Imperative (scripts/Ansible):** You say "Create server 1, then server 2, then server 3" — you define every step.
 
-**Q5. What is the difference between `terraform plan` and `terraform apply`?**
-`plan` is a dry run — it reads the config and state file, then shows what will be created, changed, or destroyed without making any changes. `apply` actually executes those changes in AWS and updates the state file.
+**Q5. What is a Terraform Provider?**
+A provider is a plugin that lets Terraform talk to a specific platform (AWS, Azure, GCP, Kubernetes, etc.). Each provider exposes resources and data sources for that platform. Defined in the `provider` block.
 
-**Q6. What is `terraform.tfstate` and why is it important?**
-It's a JSON file that maps your Terraform config to real AWS resources. Terraform uses it to know what exists, what to update, and what to destroy. Losing it means Terraform loses track of your infrastructure.
+**Q6. What is a Terraform Resource?**
+A resource is a single piece of infrastructure (EC2 instance, S3 bucket, VPC, etc.). It's defined with `resource "type" "name" { ... }`. Terraform creates, updates, and destroys resources to match your config.
 
-**Q7. Why should you never commit `terraform.tfstate` to Git?**
-It can contain sensitive data (passwords, keys, IPs). It also causes merge conflicts in teams. Instead, use remote backends like S3 + DynamoDB for shared state.
+**Q7. What is Terraform State?**
+State is a JSON file (`terraform.tfstate`) that maps your config to real-world resources. Terraform uses it to know what exists, detect drift, and determine what changes are needed on the next `apply`.
 
-**Q8. What happens if you delete the state file and run `terraform apply` again?**
-Terraform thinks no resources exist and tries to create everything again. This will fail if resources (like an S3 bucket with the same name) already exist in AWS.
+**Q8. Explain the Terraform workflow: init → plan → apply → destroy.**
+1. `terraform init` — downloads provider plugins, initializes backend.
+2. `terraform plan` — compares config vs. state, shows what will change (dry run).
+3. `terraform apply` — executes the changes, updates state.
+4. `terraform destroy` — deletes all managed resources, updates state.
 
-**Q9. What is the purpose of `.terraform.lock.hcl`?**
-It locks the exact version of provider plugins so that every team member and CI/CD pipeline uses the same version. Similar to `package-lock.json` in Node.js.
+**Q9. What does `terraform init` do?**
+Downloads provider plugins into `.terraform/`, creates `.terraform.lock.hcl` (version lock), initializes the configured backend for state storage, and downloads any referenced modules.
 
-**Q10. S3 bucket names are globally unique — what does that mean?**
-No two AWS accounts anywhere in the world can have a bucket with the same name. If `my-bucket-123` exists in someone else's account, you cannot use that name.
+**Q10. What is the difference between `terraform plan` and `terraform apply`?**
+`plan` is read-only — it shows what will be created/changed/destroyed without touching anything. `apply` actually performs those actions and writes the result to the state file.
+
+### State Management
+
+**Q11. Why is the state file important?**
+Without state, Terraform can't know what resources it manages. State maps config to real resources, tracks metadata (IDs, IPs), detects drift, and determines the correct order of operations.
+
+**Q12. Why should you never commit `terraform.tfstate` to Git?**
+It contains sensitive data (passwords, keys, IPs, ARNs). It also causes merge conflicts in teams. Use a remote backend (S3 + DynamoDB, Terraform Cloud) instead.
+
+**Q13. What is a remote backend?**
+A remote backend stores state outside your local machine — e.g., in S3, Azure Blob, GCS, or Terraform Cloud. Benefits: shared access for teams, state locking to prevent concurrent modifications, encryption, and versioning.
+
+**Q14. What is state locking and why is it needed?**
+State locking prevents two people from running `terraform apply` at the same time, which could corrupt the state. DynamoDB (for S3 backend) or Terraform Cloud handles this automatically.
+
+**Q15. What happens if you lose or delete the state file?**
+Terraform forgets all resources it created. Running `apply` again tries to create everything from scratch, which fails if resources already exist. You'd need `terraform import` to recover.
+
+**Q16. What is `terraform import`?**
+It brings existing resources (created manually or by another tool) under Terraform management by adding them to the state file. Example: `terraform import aws_s3_bucket.my_bucket my-bucket-name`.
+
+**Q17. What is state drift?**
+Drift happens when real infrastructure changes outside Terraform (someone manually edits a resource in the console). `terraform plan` detects drift by comparing state to actual cloud resources.
+
+### Variables and Outputs
+
+**Q18. What are the types of variables in Terraform?**
+- **Input variables** (`variable`) — parameters for your config. Defined with types like `string`, `number`, `bool`, `list`, `map`, `object`.
+- **Output variables** (`output`) — values displayed after apply (e.g., public IP).
+- **Local variables** (`locals`) — computed values reused within a module.
+
+**Q19. What are the ways to pass values to input variables? (Precedence order)**
+1. Command line: `-var "name=value"`
+2. Variable file: `-var-file="prod.tfvars"`
+3. Auto-loaded files: `terraform.tfvars` or `*.auto.tfvars`
+4. Environment variables: `TF_VAR_name=value`
+5. Default value in the `variable` block.
+6. Interactive prompt (if no default and no value provided).
+
+**Q20. What is the difference between `variable`, `locals`, and `output`?**
+- `variable` — input from outside the module (user provides value).
+- `locals` — intermediate computed values used inside the module (not exposed).
+- `output` — values exported from the module (displayed or consumed by other modules).
+
+**Q21. How do you mark a variable as sensitive?**
+Add `sensitive = true` in the variable block. Terraform will hide the value in plan/apply output, but it still exists in state. Example: `variable "db_password" { type = string, sensitive = true }`.
+
+### Modules
+
+**Q22. What is a Terraform Module?**
+A module is a reusable container of `.tf` files. Every Terraform directory is a module (the root module). Child modules are called with `module "name" { source = "./path" }`. They enable DRY, reusable infrastructure.
+
+**Q23. What is the difference between a root module and a child module?**
+- **Root module** — the directory where you run `terraform apply`. It's the entry point.
+- **Child module** — a module called from the root module using `module` block. Can be local paths, Git repos, or Terraform Registry.
+
+**Q24. How do you pass data between modules?**
+Parent passes data to child via input variables. Child exposes data to parent via outputs. Example: `module.vpc.vpc_id` reads the `vpc_id` output from the `vpc` module.
+
+### Dependencies and Lifecycle
+
+**Q25. What is an implicit dependency?**
+When Resource A references Resource B's attribute (e.g., `security_group_id = aws_security_group.sg.id`), Terraform automatically knows to create B before A. No extra config needed.
+
+**Q26. What is `depends_on` and when do you use it?**
+`depends_on` creates an explicit dependency when Terraform can't detect it automatically. Example: an EC2 instance that needs an IAM role policy attached before launch, but doesn't reference the policy directly.
+
+**Q27. What is a `lifecycle` block?**
+It controls how Terraform handles resource changes:
+- `create_before_destroy` — create the new resource before deleting the old one (zero downtime).
+- `prevent_destroy` — block `terraform destroy` on this resource (safety net for databases).
+- `ignore_changes` — ignore changes to specific attributes (e.g., tags modified outside Terraform).
+
+**Q28. What is a "tainted" resource?**
+A tainted resource is marked for forced recreation on the next `apply`. Used when a resource is in a bad state. Command: `terraform taint aws_instance.web` (deprecated in favor of `terraform apply -replace`).
+
+### Advanced Concepts
+
+**Q29. What are `data` sources?**
+Data sources read information about existing infrastructure that Terraform doesn't manage. Example: `data "aws_ami" "latest" { ... }` fetches the latest AMI ID. They're read-only — Terraform never modifies data sources.
+
+**Q30. What is the difference between `count` and `for_each`?**
+- `count` — creates N copies of a resource by index (`count = 3` → `resource[0]`, `resource[1]`, `resource[2]`). Removing an item shifts all indexes.
+- `for_each` — creates one copy per item in a map/set (`for_each = toset(["dev","prod"])`). Removing an item only affects that key. **Prefer `for_each`** — it's safer.
+
+**Q31. What are Terraform Workspaces?**
+Workspaces let you manage multiple state files from the same config (e.g., dev, staging, prod). Each workspace has its own state. Access the workspace name with `terraform.workspace`. Good for small setups; for large ones, use separate directories or modules.
+
+**Q32. What is a Provisioner and why should you avoid it?**
+Provisioners run scripts on a resource after creation (e.g., `remote-exec` to install software via SSH). They're a last resort because they break the declarative model, don't update state, and can't be planned. Use cloud-init, user_data, or config management tools (Ansible) instead.
+
+**Q33. What is `terraform refresh`?**
+It reads the real state of all resources from the cloud and updates the state file. This detects drift. In Terraform 0.15+ it's automatically part of `plan` and `apply`. Rarely run manually.
+
+**Q34. How does Terraform handle secrets?**
+Terraform itself doesn't encrypt secrets. Best practices: (1) Mark variables as `sensitive`. (2) Use remote state with encryption (S3 + SSE). (3) Never commit `.tfvars` with secrets to Git. (4) Integrate with HashiCorp Vault or AWS Secrets Manager via data sources.
+
+**Q35. What is `terraform graph`?**
+It outputs a visual dependency graph of resources in DOT format. Useful for understanding the order Terraform will create/destroy resources. Pipe to Graphviz to render: `terraform graph | dot -Tpng > graph.png`.
 
 ### Scenario-Based
 
-**Q11. You run `terraform apply` and get "BucketAlreadyExists". What do you do?**
-Either change the bucket name in `main.tf` to something unique, or if the bucket is yours but was created outside Terraform, use `terraform import` to bring it under Terraform management.
+**Q36. You run `terraform apply` and it fails halfway. What happens?**
+Terraform applies changes one resource at a time. Successfully created resources are saved to state. Failed resources are not. On the next `apply`, Terraform picks up where it left off — it only creates/updates what's still missing.
 
-**Q12. How would you enable versioning on this S3 bucket using Terraform?**
-Add an `aws_s3_bucket_versioning` resource block referencing the bucket, with `versioning_configuration { status = "Enabled" }`.
+**Q37. Someone manually changed a Security Group in the AWS Console. How do you detect and fix it?**
+Run `terraform plan` — it compares state to the real cloud and shows drift. If the manual change should be reverted, run `terraform apply`. If the manual change should be kept, update your `.tf` config to match, then run `terraform apply` (no changes shown = in sync).
 
-**Q13. How would you make this bucket private and block all public access?**
-Add an `aws_s3_bucket_public_access_block` resource with `block_public_acls = true`, `block_public_policy = true`, `ignore_public_acls = true`, `restrict_public_buckets = true`.
+**Q38. How do you move a resource from one state file to another?**
+Use `terraform state mv` to move within the same state, or `terraform state rm` + `terraform import` to move between separate state files. In Terraform 1.1+ you can use the `moved` block in config.
 
----
+**Q39. Your team of 5 developers all use Terraform. How do you prevent conflicts?**
+(1) Use a remote backend (S3 + DynamoDB) for shared state with locking. (2) Use CI/CD pipelines (GitHub Actions, GitLab CI) so only the pipeline runs `apply`. (3) Review `plan` output in pull requests. (4) Use branch-based workflows — never apply from local machines.
 
-## Interview Questions — EC2 (Project 2)
-
-### Basics
-
-**Q14. What is an EC2 instance?**
-EC2 (Elastic Compute Cloud) is a virtual server in AWS. You choose the OS (AMI), hardware (instance type), and networking — then AWS provisions it in seconds.
-
-**Q15. What is an AMI?**
-AMI (Amazon Machine Image) is a template containing the OS and pre-installed software. Example: `ami-0f58b397bc5c1f2e8` is Amazon Linux 2023 for ap-south-1. AMI IDs are region-specific.
-
-**Q16. What is `t2.micro` and why is it used here?**
-It's an instance type with 1 vCPU and 1 GB RAM. It's part of the AWS Free Tier (750 hours/month for 12 months), making it ideal for learning and testing.
-
-**Q17. What is a Security Group in AWS?**
-A Security Group acts as a virtual firewall for EC2 instances. It controls inbound (ingress) and outbound (egress) traffic using rules based on port, protocol, and source/destination IP.
-
-**Q18. Explain the Security Group rules in this config.**
-- **Ingress rule 1:** Allows SSH (port 22) from anywhere (`0.0.0.0/0`) — for remote login.
-- **Ingress rule 2:** Allows HTTP (port 80) from anywhere — for web traffic.
-- **Egress rule:** Allows all outbound traffic (protocol `-1` means all protocols) — so the instance can reach the internet.
-
-**Q19. What does `0.0.0.0/0` mean in a CIDR block?**
-It means "all IP addresses" — the rule applies to traffic from/to the entire internet. In production, you'd restrict SSH to specific IPs for security.
-
-**Q20. What does protocol `-1` mean in the egress rule?**
-It means "all protocols" (TCP, UDP, ICMP, etc.). Combined with ports 0–0, it allows all outbound traffic.
-
-**Q21. What is the `output` block used for?**
-It prints values after `terraform apply` completes. Here it shows the public IP and instance ID, so you can SSH into the server or find it in the AWS Console without logging in.
-
-**Q22. How does `vpc_security_group_ids` work in the EC2 resource?**
-It attaches one or more Security Groups to the instance using their IDs. The syntax `[aws_security_group.web_sg.id]` creates an implicit dependency — Terraform knows to create the SG before the instance.
-
-**Q23. What is an implicit dependency in Terraform?**
-When one resource references another (like EC2 referencing the SG's ID), Terraform automatically determines the creation order. No explicit `depends_on` is needed.
-
-### Scenario-Based
-
-**Q24. You deployed the EC2 instance but can't SSH into it. What could be wrong?**
-Possible causes: (1) No key pair attached — the config is missing `key_name`. (2) Security Group doesn't allow port 22 from your IP. (3) Instance is in a private subnet with no public IP. (4) Local firewall or VPN blocking outbound SSH.
-
-**Q25. The config allows SSH from `0.0.0.0/0`. Is this safe for production?**
-No. It allows SSH from any IP on the internet, making it vulnerable to brute-force attacks. In production, restrict to your office/VPN IP like `cidr_blocks = ["203.0.113.50/32"]`.
-
-**Q26. How would you add HTTPS (port 443) to this Security Group?**
-Add another `ingress` block with `from_port = 443`, `to_port = 443`, `protocol = "tcp"`, and appropriate `cidr_blocks`.
-
-**Q27. What happens if you change the AMI ID and run `terraform apply`?**
-Terraform will **destroy** the existing instance and create a new one with the new AMI — this is called a "force replacement." Any data on the old instance is lost.
-
-**Q28. How would you avoid hardcoding the AMI ID?**
-Use a `data` source: `data "aws_ami" "latest" { most_recent = true, owners = ["amazon"], filter { name = "name", values = ["al2023-ami-*"] } }` — this always fetches the latest AMI.
-
-### Cross-Project / General Terraform
-
-**Q29. What is the difference between `terraform destroy` and manually deleting resources in the AWS Console?**
-`terraform destroy` deletes resources AND updates the state file. Manual deletion leaves the state file out of sync — Terraform will error on the next `apply` because it thinks the resource still exists.
-
-**Q30. Can you run `terraform apply` for S3 and EC2 at the same time?**
-Not from the same directory — each directory has its own state. You'd run them from `runS3/` and `runEC2/` separately. To manage them together, use Terraform modules or workspaces.
-
-**Q31. What is the difference between `resource` and `data` in Terraform?**
-`resource` creates and manages infrastructure. `data` reads information about existing infrastructure that Terraform doesn't manage (e.g., looking up the latest AMI or default VPC).
-
-**Q32. What are Terraform variables and why aren't they used in these configs?**
-Variables (`variable` blocks) let you parameterize configs instead of hardcoding values. These configs hardcode region, bucket name, AMI, etc. for simplicity. In real projects, you'd use variables with `.tfvars` files.
-
-**Q33. What is `terraform fmt` and when should you use it?**
-It auto-formats `.tf` files to follow HashiCorp's style conventions (indentation, alignment). Run it before committing code to keep configs consistent across the team.
-
-**Q34. Explain the Terraform lifecycle: Write → Init → Plan → Apply → Destroy.**
-1. **Write** — define infrastructure in `.tf` files.
-2. **Init** — download providers, set up backend.
-3. **Plan** — preview changes (compare config vs. state).
-4. **Apply** — execute changes, update state.
-5. **Destroy** — tear down all managed resources.
-
-**Q35. How would you manage Terraform state in a team environment?**
-Use a remote backend like S3 with DynamoDB for state locking. This ensures only one person can modify state at a time and the state file is shared, versioned, and encrypted.
+**Q40. How would you manage infrastructure across multiple AWS accounts (dev, staging, prod)?**
+Options: (1) Use separate provider aliases with different credentials per account. (2) Use Terraform Workspaces with different variable files. (3) Use separate directories per environment with shared modules. (4) Use Terragrunt for DRY multi-environment configs. Option 3 or 4 is most common in production.
 
 ---
 

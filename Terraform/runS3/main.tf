@@ -1,9 +1,28 @@
-# Step 1: Tell Terraform we want to use AWS
-provider "aws" {
-  region = "ap-south-1"  # The AWS region where the bucket will be created
+# Variable for AWS region — value comes from .tfvars file
+variable "aws_region" {
+  description = "AWS region to create resources in"
+  type        = string
 }
 
-# Step 2: Create an S3 bucket
+# Variable for bucket name — value comes from .tfvars file
+variable "bucket_name" {
+  description = "Name of the S3 bucket (must be globally unique)"
+  type        = string
+}
+
+# Variable for environment tag
+variable "environment" {
+  description = "Environment name (dev, qa, prod)"
+  type        = string
+}
+
+# Create the S3 bucket
 resource "aws_s3_bucket" "my_bucket" {
-  bucket = "abhik-demo-bucket-2026"  # Change this to a globally unique name
+  bucket = var.bucket_name
+
+  tags = {
+    Name        = var.bucket_name
+    Environment = var.environment
+    ManagedBy   = "terraform"
+  }
 }
