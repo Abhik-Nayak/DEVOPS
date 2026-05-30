@@ -1,0 +1,19 @@
+# Terraform local files
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+
+# Don't commit crash logs
+crash.log
+crash.*.log
+
+# Don't commit override files (used for local overrides)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Don't commit tfvars files with secrets
+*.auto.tfvars
+secret.tfvars

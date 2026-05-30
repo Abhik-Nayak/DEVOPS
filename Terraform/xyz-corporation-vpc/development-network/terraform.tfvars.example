@@ -1,0 +1,6 @@
+# Get these values from the production-network terraform output:
+#   cd ../production-network
+#   terraform output
+
+production_vpc_id            = "vpc-0d866029f74f6c013"
+production_db_route_table_id = "rtb-01a6fdc1978a86272"
