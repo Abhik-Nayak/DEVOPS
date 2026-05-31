@@ -1,0 +1,5 @@
+web-01  192.168.1.10  nginx
+web-02  192.168.1.11  nginx
+db-01   192.168.1.20  postgres
+db-02   192.168.1.21  postgres
+cache-01 192.168.1.30 redis

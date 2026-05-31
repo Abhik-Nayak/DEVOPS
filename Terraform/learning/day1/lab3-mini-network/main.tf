@@ -174,6 +174,7 @@ resource "aws_security_group" "web" {
 resource "aws_instance" "web" {
   ami                    = "ami-0f58b397bc5c1f2e8"
   instance_type          = var.instance_type
+  key_name               = var.key_name                      # <-- SSH key pair
   subnet_id              = aws_subnet.public.id              # <-- DEPENDENCY
   vpc_security_group_ids = [aws_security_group.web.id]       # <-- DEPENDENCY
 

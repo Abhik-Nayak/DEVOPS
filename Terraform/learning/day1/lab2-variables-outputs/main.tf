@@ -33,9 +33,35 @@ provider "aws" {
   region = var.aws_region # <-- Using a variable instead of hardcoded value!
 }
 
+resource "aws_security_group" "server" {
+  name        = "${var.instance_name}-sg"
+  description = "Allow SSH inbound"
+
+  ingress {
+    description = "SSH access"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.instance_name}-sg"
+  }
+}
+
 resource "aws_instance" "server" {
-  ami           = "ami-0f58b397bc5c1f2e8"
-  instance_type = var.instance_type # <-- Variable!
+  ami                    = "ami-0f58b397bc5c1f2e8"
+  instance_type          = var.instance_type          # <-- Variable!
+  key_name               = var.key_name               # <-- SSH key pair!
+  vpc_security_group_ids = [aws_security_group.server.id]
 
   tags = {
     Name        = var.instance_name # <-- Variable!
