@@ -1,0 +1,33 @@
+Jan 15 10:15:01 web-server-01 systemd[1]: Starting nginx.service...
+Jan 15 10:15:02 web-server-01 systemd[1]: Started nginx.service.
+Jan 15 10:15:02 web-server-01 nginx[2041]: nginx/1.18.0 started
+Jan 15 10:15:30 web-server-01 node[2100]: app listening on port 3000
+Jan 15 10:16:20 db-server-01 postgres[891]: connection timeout from 10.0.1.5
+Jan 15 10:16:21 db-server-01 postgres[891]: ERROR: too many connections for role "appuser"
+Jan 15 10:17:10 db-server-01 postgres[891]: connection timeout from 10.0.1.5
+Jan 15 10:18:30 db-server-01 postgres[891]: connection restored from 10.0.1.5
+Jan 15 10:19:00 web-server-01 sshd[3201]: Failed password for root from 10.0.0.8 port 44312
+Jan 15 10:19:02 web-server-01 sshd[3201]: Failed password for root from 10.0.0.8 port 44312
+Jan 15 10:19:05 web-server-01 sshd[3201]: Failed password for root from 10.0.0.8 port 44312
+Jan 15 10:19:10 web-server-01 sshd[3205]: Failed password for admin from 10.0.0.8 port 44350
+Jan 15 10:19:15 web-server-01 sshd[3205]: Failed password for admin from 10.0.0.8 port 44350
+Jan 15 10:20:00 web-server-01 fail2ban[1500]: Ban 10.0.0.8
+Jan 15 10:20:01 web-server-01 fail2ban[1500]: WARNING: 10.0.0.8 has been banned for 3600 seconds
+Jan 15 10:21:10 db-server-01 postgres[891]: connection timeout from 10.0.1.5
+Jan 15 10:21:11 db-server-01 postgres[891]: ERROR: deadlock detected on table "data"
+Jan 15 10:21:15 web-server-01 node[2100]: WARN: memory usage at 89%
+Jan 15 10:21:20 web-server-01 node[2100]: WARN: event loop lag detected: 250ms
+Jan 15 10:22:00 web-server-01 systemd[1]: nginx.service: watchdog timeout. Restarting.
+Jan 15 10:22:01 web-server-01 systemd[1]: Stopping nginx.service...
+Jan 15 10:22:02 web-server-01 systemd[1]: Started nginx.service.
+Jan 15 10:22:02 web-server-01 nginx[2041]: nginx/1.18.0 started
+Jan 15 10:23:00 db-server-01 postgres[891]: FATAL: connection pool exhausted, max_connections=100
+Jan 15 10:23:01 db-server-01 postgres[891]: HINT: increase max_connections in postgresql.conf
+Jan 15 10:25:00 web-server-01 crond[800]: (root) CMD (/usr/local/bin/health-check.sh)
+Jan 15 10:25:01 web-server-01 health-check[4010]: OK: nginx responding on port 80
+Jan 15 10:25:01 web-server-01 health-check[4010]: OK: node responding on port 3000
+Jan 15 10:25:02 web-server-01 health-check[4010]: FAIL: database check timed out after 5s
+Jan 15 10:30:00 web-server-01 crond[800]: (root) CMD (/usr/local/bin/health-check.sh)
+Jan 15 10:30:01 web-server-01 health-check[4050]: OK: nginx responding on port 80
+Jan 15 10:30:01 web-server-01 health-check[4050]: OK: node responding on port 3000
+Jan 15 10:30:01 web-server-01 health-check[4050]: OK: database responding on port 5432

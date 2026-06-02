@@ -1,0 +1,38 @@
+2024-01-15 10:15:30 INFO  [main] server starting up
+2024-01-15 10:15:31 INFO  [main] loading configuration from /etc/app/config.yaml
+2024-01-15 10:15:31 INFO  [db] connecting to database host=db.internal port=5432
+2024-01-15 10:15:32 INFO  [main] server started on port 3000
+2024-01-15 10:15:33 WARN  [auth] login attempt failed for user=admin ip=10.0.0.5 reason=bad_password
+2024-01-15 10:16:01 INFO  [http] serving request method=GET path=/index.html status=200 duration=12ms
+2024-01-15 10:16:05 WARN  [auth] login attempt failed for user=admin ip=10.0.0.5 reason=bad_password
+2024-01-15 10:16:10 INFO  [auth] user=admin session created ip=192.168.1.10
+2024-01-15 10:16:15 INFO  [auth] login successful for user=admin ip=10.0.0.5
+2024-01-15 10:16:20 ERROR [db] database connection timeout after 30s host=db.internal
+2024-01-15 10:16:21 ERROR [db] query failed: SELECT * FROM tasks WHERE user_id=3
+2024-01-15 10:16:22 WARN  [http] slow request method=GET path=/api/data duration=30024ms
+2024-01-15 10:17:01 INFO  [http] serving request method=GET path=/index.html status=200 duration=8ms
+2024-01-15 10:17:05 ERROR [auth] unauthorized DELETE attempt by user=admin on /api/user/5
+2024-01-15 10:17:10 ERROR [db] database connection timeout after 30s host=db.internal
+2024-01-15 10:17:15 INFO  [auth] user=admin session destroyed
+2024-01-15 10:18:01 INFO  [http] serving request method=GET path=/index.html status=200 duration=10ms
+2024-01-15 10:18:10 INFO  [http] serving request method=GET path=/api/users status=200 duration=45ms
+2024-01-15 10:18:22 INFO  [http] serving request method=POST path=/api/tasks status=201 duration=32ms
+2024-01-15 10:18:30 INFO  [db] connection restored host=db.internal
+2024-01-15 10:18:30 INFO  [http] serving request method=GET path=/api/data status=200 duration=18ms
+2024-01-15 10:19:15 WARN  [auth] login attempt failed for user=root ip=10.0.0.8 reason=bad_password
+2024-01-15 10:19:18 WARN  [auth] login attempt failed for user=root ip=10.0.0.8 reason=bad_password
+2024-01-15 10:19:20 WARN  [auth] login attempt failed for user=root ip=10.0.0.8 reason=bad_password
+2024-01-15 10:19:22 WARN  [auth] login attempt failed for user=root ip=10.0.0.8 reason=bad_password
+2024-01-15 10:19:25 WARN  [auth] login attempt failed for user=root ip=10.0.0.8 reason=bad_password
+2024-01-15 10:19:25 ERROR [auth] account locked user=root after 5 failed attempts from ip=10.0.0.8
+2024-01-15 10:19:30 INFO  [http] serving request method=GET path=/dashboard status=200 duration=22ms
+2024-01-15 10:20:01 INFO  [http] serving request method=PUT path=/api/data/7 status=200 duration=15ms
+2024-01-15 10:20:15 INFO  [http] serving request method=GET path=/api/tasks status=200 duration=28ms
+2024-01-15 10:20:30 WARN  [auth] login attempt for locked account user=root ip=10.0.0.8
+2024-01-15 10:20:45 ERROR [auth] unauthorized DELETE attempt by user=root on /api/user/12
+2024-01-15 10:20:50 ERROR [auth] unauthorized DELETE attempt by user=root on /api/user/8
+2024-01-15 10:21:01 INFO  [http] serving request method=GET path=/about status=200 duration=9ms
+2024-01-15 10:21:10 ERROR [db] database connection timeout after 30s host=db.internal
+2024-01-15 10:21:11 ERROR [db] query failed: SELECT * FROM data WHERE id=7
+2024-01-15 10:21:15 WARN  [monitor] high memory usage: 89% on pid=1234
+2024-01-15 10:21:20 WARN  [monitor] disk usage above threshold: /var/log at 92%

@@ -1,0 +1,21 @@
+name,department,salary,city
+Alice,Engineering,95000,Seattle
+Bob,Marketing,72000,New York
+Charlie,Engineering,88000,Seattle
+Diana,Marketing,78000,Chicago
+Eve,Engineering,102000,New York
+Frank,Support,55000,Chicago
+Grace,Engineering,91000,Seattle
+Hank,Support,58000,New York
+Ivy,Marketing,74000,Seattle
+Jack,Engineering,110000,Chicago
+Karen,Support,62000,Seattle
+Leo,Marketing,81000,Chicago
+Mona,Engineering,97000,New York
+Nathan,Support,54000,Chicago
+Olivia,Engineering,105000,Seattle
+Paul,Marketing,69000,New York
+Quinn,Support,60000,Seattle
+Rachel,Engineering,93000,Chicago
+Sam,Marketing,76000,Seattle
+Tina,Support,57000,New York

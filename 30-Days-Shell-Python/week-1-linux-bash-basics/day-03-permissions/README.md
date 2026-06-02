@@ -311,4 +311,4 @@ sudo chown $USER file.txt          # If ownership is wrong
 
 ---
 
-> **Tomorrow (Day 4)**: Users, groups, and the superuser — `useradd`, `groupadd`, `sudo`, and `/etc/passwd`.
+> **Tomorrow (Day 4)**: Text Processing Part 1 — `grep`, `cut`, `sort`, `uniq`, `wc`, `head`, `tail`, and `tr`.
