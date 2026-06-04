@@ -1,0 +1,17 @@
+2024-03-15 08:00:12 [INFO] [auth-service] Server started on port 3000
+2024-03-15 08:01:45 [INFO] [auth-service] Connected to database cluster-primary
+2024-03-15 08:05:33 [DEBUG] [auth-service] Health check passed src=10.0.1.1
+2024-03-15 08:12:07 [INFO] [api-gateway] Request processed: GET /api/users duration=45ms
+2024-03-15 08:15:22 [WARN] [auth-service] Slow query detected: SELECT * FROM sessions duration=2300ms
+2024-03-15 08:20:18 [ERROR] [api-gateway] Connection timeout to upstream service src=10.0.1.50 duration=30000ms
+2024-03-15 08:22:01 [INFO] [worker] Background job completed: cleanup_expired_tokens count=143
+2024-03-15 08:30:55 [ERROR] [auth-service] Failed login attempt user=admin src=192.168.1.105
+2024-03-15 08:31:10 [ERROR] [auth-service] Failed login attempt user=admin src=192.168.1.105
+2024-03-15 08:31:28 [WARN] [auth-service] Rate limit triggered for src=192.168.1.105
+2024-03-15 08:35:44 [INFO] [api-gateway] Request processed: POST /api/data duration=120ms
+2024-03-15 08:40:09 [INFO] [worker] Scheduled task started: generate_daily_report
+2024-03-15 08:45:33 [WARN] [api-gateway] High memory usage: 82% on node app-server-1
+2024-03-15 08:50:17 [ERROR] [worker] Job failed: send_notification error="SMTP connection refused"
+2024-03-15 08:55:01 [CRITICAL] [auth-service] Database connection pool exhausted max=50 active=50 waiting=12
+2024-03-15 09:00:00 [INFO] [api-gateway] Request processed: GET /api/health duration=5ms
+2024-03-15 09:05:22 [INFO] [auth-service] Token refresh completed user=jdoe src=10.0.2.30

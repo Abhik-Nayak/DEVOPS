@@ -1,0 +1,30 @@
+2024-03-15 08:01:12 sshd[1423]: Accepted publickey for admin from 192.168.1.10 port 52341 ssh2
+2024-03-15 08:05:33 sshd[1456]: Failed password for root from 203.0.113.45 port 39821 ssh2
+2024-03-15 08:05:35 sshd[1457]: Failed password for root from 203.0.113.45 port 39822 ssh2
+2024-03-15 08:05:38 sshd[1458]: Failed password for admin from 203.0.113.45 port 39823 ssh2
+2024-03-15 08:06:01 sshd[1460]: Failed password for root from 203.0.113.45 port 39830 ssh2
+2024-03-15 08:06:15 fail2ban[890]: WARNING [sshd] Ban 203.0.113.45
+2024-03-15 08:10:22 webapp[3001]: INFO Login successful user=jdoe ip=192.168.1.15
+2024-03-15 08:15:44 webapp[3001]: INFO Login successful user=asmith ip=192.168.1.22
+2024-03-15 08:20:01 webapp[3001]: WARN Login failed user=bwayne ip=10.0.0.55 reason=invalid_password
+2024-03-15 08:20:15 webapp[3001]: WARN Login failed user=bwayne ip=10.0.0.55 reason=invalid_password
+2024-03-15 08:20:30 webapp[3001]: WARN Login failed user=bwayne ip=10.0.0.55 reason=account_locked
+2024-03-15 08:25:10 sshd[1520]: Accepted publickey for deploy from 192.168.1.100 port 52400 ssh2
+2024-03-15 08:30:00 webapp[3001]: INFO Login successful user=mjones ip=192.168.1.30
+2024-03-15 09:01:05 sshd[1580]: Failed password for ubuntu from 198.51.100.23 port 41200 ssh2
+2024-03-15 09:01:08 sshd[1581]: Failed password for ubuntu from 198.51.100.23 port 41201 ssh2
+2024-03-15 09:01:45 sshd[1590]: Accepted password for ubuntu from 192.168.1.50 port 52500 ssh2
+2024-03-15 09:15:33 webapp[3001]: INFO Login successful user=jdoe ip=192.168.1.15
+2024-03-15 09:30:00 webapp[3001]: INFO Session expired user=asmith
+2024-03-15 09:45:12 webapp[3001]: WARN Login failed user=admin ip=172.16.0.5 reason=invalid_password
+2024-03-15 09:45:20 webapp[3001]: WARN Login failed user=admin ip=172.16.0.5 reason=invalid_password
+2024-03-15 09:45:28 webapp[3001]: INFO Login successful user=admin ip=172.16.0.5
+2024-03-15 10:00:00 sshd[1650]: Accepted publickey for admin from 192.168.1.10 port 52600 ssh2
+2024-03-15 10:10:15 webapp[3001]: INFO Login successful user=klane ip=192.168.1.40
+2024-03-15 10:30:00 fail2ban[890]: NOTICE [sshd] Unban 203.0.113.45
+2024-03-15 10:35:22 sshd[1700]: Failed password for root from 203.0.113.45 port 40100 ssh2
+2024-03-15 10:35:25 sshd[1701]: Failed password for root from 203.0.113.45 port 40101 ssh2
+2024-03-15 10:35:30 fail2ban[890]: WARNING [sshd] Ban 203.0.113.45
+2024-03-15 11:00:00 webapp[3001]: INFO Login successful user=mjones ip=192.168.1.30
+2024-03-15 11:15:45 webapp[3001]: WARN Login failed user=test ip=10.0.0.99 reason=user_not_found
+2024-03-15 11:30:00 webapp[3001]: INFO Session expired user=jdoe

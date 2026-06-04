@@ -1,0 +1,17 @@
+2024-03-15 08:01:05 [INFO] [worker] Server started on port 3000
+2024-03-15 08:03:50 [INFO] [worker] Connected to message queue rabbitmq-primary
+2024-03-15 08:07:22 [DEBUG] [worker] Health check passed src=10.0.3.1
+2024-03-15 08:14:38 [INFO] [worker] Job started: process_uploads batch_size=50
+2024-03-15 08:16:55 [WARN] [worker] Disk space warning: /data partition at 85% on app-server-3
+2024-03-15 08:20:41 [ERROR] [worker] Job failed: process_uploads error="disk write failed" src=10.0.3.20
+2024-03-15 08:22:15 [ERROR] [api-gateway] Connection timeout to upstream service src=10.0.3.55 duration=30000ms
+2024-03-15 08:28:30 [INFO] [auth-service] User session created user=mgarcia src=10.0.3.40
+2024-03-15 08:32:05 [ERROR] [auth-service] Failed login attempt user=test src=192.168.1.105
+2024-03-15 08:33:18 [WARN] [auth-service] Account lockout triggered user=test src=192.168.1.105
+2024-03-15 08:38:50 [INFO] [worker] Job completed: process_uploads processed=47 failed=3
+2024-03-15 08:44:12 [WARN] [worker] Memory usage warning: 78% on app-server-3 threshold=75%
+2024-03-15 08:49:25 [ERROR] [api-gateway] Request timeout: POST /api/upload duration=60000ms src=10.0.3.70
+2024-03-15 08:53:08 [CRITICAL] [worker] Out of memory: job scheduler terminated pid=4521
+2024-03-15 08:56:30 [INFO] [worker] Job scheduler restarted pid=4620
+2024-03-15 09:00:15 [INFO] [api-gateway] Request processed: GET /api/health duration=12ms
+2024-03-15 09:04:00 [INFO] [worker] Batch processing resumed: queue_depth=340

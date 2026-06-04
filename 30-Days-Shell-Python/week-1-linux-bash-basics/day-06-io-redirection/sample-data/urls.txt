@@ -1,0 +1,10 @@
+https://api.example.com/v1/users
+http://legacy.internal.corp/status
+https://cdn.assets.io/images/logo.png
+https://api.example.com/v1/products?page=2
+http://monitoring.local:9090/metrics
+https://auth.example.com/oauth/token
+https://storage.cloud.provider.net/bucket/data.csv
+http://10.0.1.50:8080/health
+https://api.example.com/v1/orders/12345
+https://webhook.site/callback?event=deploy
