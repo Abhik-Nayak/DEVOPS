@@ -72,7 +72,7 @@ else
 fi
 echo ""
 
-# --- Logged-in Users ---
+# --- Logged-in Users ---ls 
 echo "--- Logged-in Users ---"
 if command -v who > /dev/null 2>&1; then
     USER_COUNT=$(who 2>/dev/null | wc -l)
