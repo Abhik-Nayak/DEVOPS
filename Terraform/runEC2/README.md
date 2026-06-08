@@ -1,171 +1,329 @@
-# EC2 Instance — Terraform
+# EC2 Instance with SSM Session Manager — Terraform
 
-Creates a single EC2 instance with a security group in AWS using Terraform.
-
-## Prerequisites
-
-- [Terraform](https://developer.hashicorp.com/terraform/install) installed
-- AWS CLI configured with credentials (`aws configure`)
-- An AWS key pair created (if you want SSH access — see Step-by-Step Tasks below)
-
-## Usage
-
-```bash
-terraform init      # Download AWS provider plugin
-terraform plan      # Preview what will be created
-terraform apply     # Create the EC2 instance + security group
-terraform destroy   # Delete everything when done
-```
-
-## Configuration
-
-Edit `main.tf` to change:
-
-- **region** — AWS region (default: `ap-south-1`)
-- **ami** — Amazon Machine Image ID (default: Amazon Linux 2023 for ap-south-1)
-- **instance_type** — Instance size (default: `t2.micro`, free-tier eligible)
-- **Security Group rules** — Ports allowed (default: SSH on 22, HTTP on 80)
-
-## File Structure
-
-| File | What it does |
-|---|---|
-| `main.tf` | Defines the AWS provider, security group, and EC2 instance. This is the only file you edit. |
-| `.gitignore` | Tells Git which files to ignore (state files, secrets, plugin folders). |
-| `.terraform/` | Auto-created by `terraform init`. Contains the downloaded AWS provider plugin. Never edit this. |
-| `.terraform.lock.hcl` | Auto-created by `terraform init`. Locks the exact provider version. |
-| `terraform.tfstate` | Auto-created by `terraform apply`. Stores current state of your resources. **Do not delete or edit manually.** |
-| `terraform.tfstate.backup` | Auto-created backup of the previous state file. |
+Launch an EC2 instance on AWS and connect to it **without SSH keys** using AWS Systems Manager (SSM) Session Manager. This is the production-recommended approach.
 
 ---
 
-## Step-by-Step Tasks
+## Why SSM Instead of SSH Keys?
 
-### Task 1: Verify Prerequisites
+| Approach | Security | Key Management | Audit Logs |
+|----------|----------|---------------|------------|
+| `.pem` key on local machine | Low — key can leak | You manage rotation | No |
+| AWS Console key pair | Medium | AWS stores, you download | No |
+| **SSM Session Manager** | **High — no keys at all** | **None needed** | **Yes — CloudWatch** |
 
-- [ ] Confirm Terraform is installed → `terraform -version`
-- [ ] Confirm AWS CLI is configured → `aws sts get-caller-identity`
-- [ ] Confirm your IAM user has EC2 permissions (`AmazonEC2FullAccess` policy)
+**How SSM works:**
 
-### Task 2: Create a Key Pair (for SSH access)
+```
+Your PC  ──HTTPS──▶  AWS SSM Service  ──▶  SSM Agent on EC2
+                     (managed by AWS)       (pre-installed on Amazon Linux/Ubuntu)
+```
 
-- [ ] Go to AWS Console → EC2 → Key Pairs → **Create key pair**
-- [ ] Name it (e.g., `abhik-ec2-key`), select `.pem` format, download it
-- [ ] Save the `.pem` file somewhere safe (e.g., `~/.ssh/`)
-- [ ] (Optional) Add `key_name = "abhik-ec2-key"` to the `aws_instance` block in `main.tf`
+- No inbound ports needed — the agent inside EC2 **calls out** to AWS over HTTPS
+- Access is controlled by **IAM policies** (who can call `ssm:StartSession`)
+- Every session is **logged** and auditable
+- No `.pem` files to lose, rotate, or accidentally commit to git
 
-### Task 3: Review the Terraform Config
+---
 
-- [ ] Open `main.tf` and read through each step
-- [ ] Verify the **region** matches your AWS setup
-- [ ] Verify the **AMI ID** is valid for your chosen region
-  - Find AMIs: AWS Console → EC2 → Launch Instance → browse AMIs
-- [ ] Verify `instance_type` is `t2.micro` (free-tier eligible)
+## Architecture Overview
 
-### Task 4: Initialize Terraform
+```
+┌─────────────────────────────────────────────────┐
+│  AWS Cloud (ap-south-1)                         │
+│                                                 │
+│  ┌─────────────────────────────────────────┐    │
+│  │  Default VPC                            │    │
+│  │                                         │    │
+│  │  ┌───────────────────────────────┐      │    │
+│  │  │  Existing Subnet              │      │    │
+│  │  │                               │      │    │
+│  │  │  ┌─────────────────────┐      │      │    │
+│  │  │  │  EC2 (t2.micro)     │      │      │    │
+│  │  │  │  Ubuntu 24.04       │      │      │    │
+│  │  │  │  IAM Role: SSM      │      │      │    │
+│  │  │  │  SG: HTTP (80) only │      │      │    │
+│  │  │  └─────────────────────┘      │      │    │
+│  │  │                               │      │    │
+│  │  └───────────────────────────────┘      │    │
+│  │                                         │    │
+│  └─────────────────────────────────────────┘    │
+│                                                 │
+│  SSM Service ◄── Agent calls out (no inbound)   │
+│                                                 │
+└─────────────────────────────────────────────────┘
+         ▲
+         │ HTTPS (aws ssm start-session)
+         │
+    Your Local PC
+```
+
+---
+
+## What Terraform Creates (5 Resources)
+
+| # | Resource | What It Does |
+|---|----------|-------------|
+| 1 | `aws_security_group.web_sg` | Firewall — allows only HTTP (port 80) inbound. No SSH port needed. |
+| 2 | `aws_iam_role.ec2_ssm_role` | IAM role that gives EC2 permission to talk to SSM service |
+| 3 | `aws_iam_role_policy_attachment.ssm_policy` | Attaches AWS-managed `AmazonSSMManagedInstanceCore` policy to the role |
+| 4 | `aws_iam_instance_profile.ec2_ssm_profile` | Wrapper that lets you attach the IAM role to an EC2 instance |
+| 5 | `aws_instance.web_server` | The actual EC2 instance (Ubuntu 24.04, t2.micro, free-tier) |
+
+**Data sources** (read-only lookups, not created):
+- `aws_vpc.default` — finds your default VPC dynamically (no hardcoded VPC ID)
+- `aws_subnets.default` — finds existing subnets in that VPC (no new subnet created)
+
+---
+
+## Prerequisites
+
+### 1. Install Terraform
+
+**On Ubuntu/WSL:**
+```bash
+sudo snap install terraform --classic
+```
+
+> `--classic` is required because Terraform needs filesystem and network access beyond the snap sandbox. This is safe.
+
+**Verify:**
+```bash
+terraform --version
+```
+
+### 2. Install AWS CLI
+
+**On Ubuntu/WSL:**
+```bash
+sudo apt update && sudo apt install awscli -y
+```
+
+**Verify:**
+```bash
+aws --version
+```
+
+### 3. Configure AWS Credentials
+
+```bash
+aws configure
+```
+
+| Prompt | What to enter |
+|--------|---------------|
+| AWS Access Key ID | Your key (starts with `AKIA...`) |
+| AWS Secret Access Key | Your secret key |
+| Default region name | `ap-south-1` |
+| Default output format | `json` |
+
+**Where to get your Access Key:**
+1. AWS Console → search **IAM**
+2. Go to **Users** → click your username
+3. **Security credentials** tab → **Access keys** → **Create access key**
+4. Choose **Command Line Interface (CLI)**
+5. Copy both keys (you won't see the secret again)
+
+**Verify credentials work:**
+```bash
+aws sts get-caller-identity
+```
+
+You should see your account ID, ARN, and user ID.
+
+### 4. Install SSM Session Manager Plugin
+
+This is needed to connect to EC2 from your terminal (without SSH).
+
+**On Ubuntu/WSL:**
+```bash
+curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"
+sudo dpkg -i session-manager-plugin.deb
+rm session-manager-plugin.deb
+```
+
+**Verify:**
+```bash
+session-manager-plugin
+```
+
+You should see: `The Session Manager plugin was installed successfully.`
+
+---
+
+## Step-by-Step Deployment
+
+### Step 1: Initialize Terraform
 
 ```bash
 cd Terraform/runEC2
 terraform init
 ```
 
-- [ ] Run `terraform init` — downloads the AWS provider plugin
-- [ ] Confirm you see: `Terraform has been successfully initialized!`
+**What this does:** Downloads the AWS provider plugin into `.terraform/` directory.
 
-### Task 5: Plan the Deployment
+**Expected output:** `Terraform has been successfully initialized!`
+
+### Step 2: Preview the Plan
 
 ```bash
 terraform plan
 ```
 
-- [ ] Run `terraform plan` — previews what will be created
-- [ ] Confirm it shows **3 resources to add**:
-  1. `aws_security_group.web_sg`
-  2. `aws_instance.web_server`
-  3. (Outputs: `instance_public_ip`, `instance_id`)
-- [ ] Review the plan — no surprises
+**What this does:** Reads `main.tf` and shows what will be created — without actually creating anything.
 
-### Task 6: Deploy the EC2 Instance
+**Expected output:** `Plan: 5 to add, 0 to change, 0 to destroy.`
+
+Review the plan. You should see:
+- 1 security group (HTTP port 80 only)
+- 1 IAM role + 1 policy attachment + 1 instance profile (for SSM)
+- 1 EC2 instance (t2.micro, Ubuntu)
+
+### Step 3: Deploy
 
 ```bash
 terraform apply
 ```
 
-- [ ] Run `terraform apply`
-- [ ] Type `yes` when prompted
-- [ ] Wait for creation (usually 30–60 seconds)
-- [ ] Note the **public IP** from the output
+- Type `yes` when prompted
+- Wait 30–60 seconds for creation
+- Note the outputs:
 
-### Task 7: Verify the Instance is Running
-
-- [ ] Check AWS Console → EC2 → Instances → confirm instance is `running`
-- [ ] Confirm the **public IP** matches the Terraform output
-- [ ] Confirm the **security group** is attached with correct rules
-
-### Task 8: Connect to the Instance (SSH)
-
-```bash
-ssh -i ~/.ssh/abhik-ec2-key.pem ec2-user@<PUBLIC_IP>
+```
+Outputs:
+  instance_id        = "i-0abc123def456..."
+  instance_public_ip = "13.x.x.x"
 ```
 
-- [ ] Replace `<PUBLIC_IP>` with the IP from Task 6
-- [ ] If using Amazon Linux, the default user is `ec2-user`
-- [ ] If you get a permission error on the key: `chmod 400 ~/.ssh/abhik-ec2-key.pem`
+### Step 4: Wait 2–3 Minutes
 
-### Task 9: (Optional) Install a Web Server
+The SSM agent inside the EC2 instance needs time to register with the SSM service after boot. If you try to connect immediately, it may fail.
+
+### Step 5: Connect to Your Instance
 
 ```bash
-sudo yum update -y
-sudo yum install -y httpd
-sudo systemctl start httpd
-sudo systemctl enable httpd
+aws ssm start-session --target i-0abc123def456
+```
+
+Replace `i-0abc123def456` with your actual instance ID from Step 3.
+
+**Expected output:**
+```
+Starting session with SessionId: YourUser-abc123...
+$
+```
+
+You're now inside your EC2 instance!
+
+### Step 6: Switch to the Ubuntu User
+
+SSM connects as `ssm-user` by default. Switch to `ubuntu` for a normal experience:
+
+```bash
+sudo su - ubuntu
+```
+
+Now you're at `/home/ubuntu` — same as connecting via AWS Console.
+
+### Step 7: (Optional) Install a Web Server
+
+```bash
+sudo apt update
+sudo apt install -y nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
 echo "<h1>Hello from EC2!</h1>" | sudo tee /var/www/html/index.html
 ```
 
-- [ ] SSH into the instance (Task 8)
-- [ ] Run the commands above to install Apache
-- [ ] Open `http://<PUBLIC_IP>` in a browser — you should see "Hello from EC2!"
+Open `http://<instance_public_ip>` in your browser — you should see "Hello from EC2!"
 
-### Task 10: Clean Up (Destroy Resources)
+### Step 8: Exit the Session
+
+```bash
+exit
+```
+
+### Step 9: Clean Up (Destroy Everything)
 
 ```bash
 terraform destroy
 ```
 
-- [ ] Run `terraform destroy`
-- [ ] Type `yes` when prompted
-- [ ] Confirm all resources are destroyed (avoids ongoing charges)
-- [ ] Verify in AWS Console that the instance is `terminated`
+- Type `yes` when prompted
+- Confirm all 5 resources are destroyed
+- Verify in AWS Console that the instance is `terminated`
+
+> **Always destroy when done** to avoid charges.
+
+---
+
+## File Structure
+
+| File | What It Does |
+|------|-------------|
+| `main.tf` | All Terraform config — provider, security group, IAM role, EC2 instance |
+| `README.md` | This guide |
+| `.gitignore` | Tells Git to ignore state files, secrets, plugin folders |
+| `.terraform/` | Auto-created by `terraform init`. Contains AWS provider plugin. Never edit. |
+| `.terraform.lock.hcl` | Auto-created. Locks the exact provider version. |
+| `terraform.tfstate` | Auto-created by `terraform apply`. Current state of your resources. **Never edit manually.** |
+| `terraform.tfstate.backup` | Auto-created backup of previous state. |
 
 ---
 
 ## Terraform Command Flow
 
 ```
-terraform init  ──→  Downloads plugins into .terraform/
-                     Creates .terraform.lock.hcl
-                         │
-terraform plan  ──→  Reads main.tf + terraform.tfstate
-                     Shows: 2 resources to create
-                     (nothing actually happens)
-                         │
-terraform apply ──→  Creates security group + EC2 instance
-                     Saves the result in terraform.tfstate
-                     Prints the public IP
-                         │
-terraform destroy ─→  Terminates instance, deletes security group
-                      Updates terraform.tfstate
+terraform init    ──→  Downloads plugins into .terraform/
+                       Creates .terraform.lock.hcl
+                           │
+terraform plan    ──→  Reads main.tf + terraform.tfstate
+                       Shows: 5 resources to create
+                       (nothing actually happens)
+                           │
+terraform apply   ──→  Creates SG + IAM role + instance profile + EC2
+                       Saves the result in terraform.tfstate
+                       Prints instance ID and public IP
+                           │
+terraform destroy ──→  Terminates instance, deletes SG, IAM role, etc.
+                       Updates terraform.tfstate
 ```
 
-## Common Failures
+---
 
-| Reason | Description |
-|---|---|
-| Invalid AMI ID | AMI IDs are region-specific — use one valid for your chosen region |
-| No key pair | Can't SSH without a key pair attached to the instance |
-| Connection timeout | Security group may not allow SSH (port 22) or your IP is blocked |
-| Instance limit | AWS accounts have a default vCPU limit per region |
-| No public IP | Instance needs to be in a subnet with auto-assign public IP enabled |
-| Permission denied | IAM user lacks `ec2:RunInstances` — needs `AmazonEC2FullAccess` policy |
-| Wrong user for SSH | Amazon Linux uses `ec2-user`, Ubuntu uses `ubuntu`, Debian uses `admin` |
-| Insufficient capacity | AWS ran out of `t2.micro` in that AZ — try a different AZ or instance type |
+## Common Errors and Fixes
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `InvalidClientTokenId` | AWS credentials are wrong or expired | Run `aws configure` again with valid keys |
+| `MissingInput: No subnets found` | Default VPC has no subnets | Use `data "aws_subnets"` to find existing ones (already done in our config) |
+| `InvalidSubnet.Conflict` | CIDR conflicts with existing subnet | Don't create new subnets — use existing ones via data source |
+| `TargetNotConnected` on SSM | SSM agent hasn't registered yet | Wait 2–3 minutes after instance launch, then retry |
+| `session-manager-plugin not found` | Plugin not installed locally | Install the SSM plugin (see Prerequisites step 4) |
+| `syntax error near unexpected token` | Used `<angle brackets>` in command | Remove `<` and `>` — they're placeholder markers, not part of the command |
+| Instance has no public IP | Subnet doesn't auto-assign public IP | Use a subnet with `map_public_ip_on_launch = true` |
+
+---
+
+## SSM vs SSH — Quick Comparison
+
+| Feature | SSH (.pem key) | SSM Session Manager |
+|---------|---------------|-------------------|
+| Port 22 needed? | Yes | No |
+| Key management | You manage `.pem` files | None — IAM handles it |
+| Audit trail | No built-in logging | CloudWatch logs every session |
+| Firewall rules | Must open port 22 | No inbound ports needed |
+| Works from AWS Console? | No | Yes — one-click connect |
+| Works from terminal? | `ssh -i key.pem user@ip` | `aws ssm start-session --target id` |
+| Security level | Low-Medium | High |
+| Production recommended? | No | Yes |
+
+---
+
+## Key Concepts Learned
+
+1. **Terraform data sources** — `data` blocks read existing AWS resources instead of creating new ones
+2. **IAM Role + Instance Profile** — how EC2 gets permission to use AWS services (SSM in our case)
+3. **SSM Session Manager** — production-standard way to access EC2 without SSH keys
+4. **Security Groups** — act as firewalls; we only open port 80 (HTTP), no SSH needed
+5. **`ssm-user` vs `ubuntu`** — SSM logs in as `ssm-user` by default; use `sudo su - ubuntu` to switch
